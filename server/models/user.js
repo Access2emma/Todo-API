@@ -74,7 +74,7 @@ UserSchema.statics.findByToken = function(token){
 		return Promise.reject();
 	}
 
-	return User.find({
+	return User.findOne({
 		_id: decoded._id,
 		'tokens.access': decoded.access,
 		'tokens.token': token

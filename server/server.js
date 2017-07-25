@@ -124,7 +124,7 @@ app.post('/users', (request, response) => {
 					response.header('x-auth', token).send(user);
 				})
 
-		}).catch(err => response.send(err))
+		}).catch(err => response.status(400).send(err))
 });
 
 app.get('/users/me', authenticate, (request, response) => {

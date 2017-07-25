@@ -3,6 +3,7 @@ const expect = require('expect');
 const {ObjectID} = require('mongodb');
 
 const {Todo} = require('./models/todo');
+const {User} = require('./models/user');
 const {app} = require('./server');
 const {testUsers, testTodos, populateUsers, populateTodos}  = require('./test/seed');
 
@@ -182,4 +183,90 @@ describe('PATCH /todos/:id', () => {
 					}).catch(err => done(err));
 			})
 	});
-})
+});
+
+describe('GET /users/me', ()=>{
+	it('should return user if authenticated', (done) =>{
+		request(app)
+			.get('/users/me')
+			.set('x-auth', testUsers[1].tokens[0].token)
+			.expect(200)
+			.expect( resp => {
+				expect(resp.body._id).toBe(testUsers[1]._id.toHexString());
+				expect(resp.body.email).toBe(testUsers[1].email);
+			})
+			.end(done);
+	});
+
+	it('should return 401 if user not authenticated', (done) => {
+		request(app)
+			.get('/users/me')
+			.expect(401)
+			.expect( resp => {
+				expect(resp.body)
+					.toInclude({ errorMessage: 'Authentication Required' });
+			})
+			.end(done)
+	});
+});
+
+describe('POST /users', () => {
+	it('should create new user if information is unique', (done) => {
+		const email = 'example@exaple.com';
+		const password = 'password123!';
+
+		request(app)
+			.post('/users')
+			.send({email, password})
+			.expect(200)
+			.expect( resp => {
+				expect(resp.headers['x-auth']).toExist();
+				expect(resp.body.email).toBe(email);
+			})
+			.end((err, resp) => {
+				if(err){
+					return done(err);
+				}
+
+				User.findOne({email})
+					.then(user => {
+						expect(user).toExist();
+						expect(user.email).toBe(email);
+						expect(user.password).toNotBe(password);
+						done();
+					})
+					.catch(err => done(err));
+			})
+		});
+
+	it('should return valiation error if request invalid', (done) => {
+		const email = 'example@exaple.com';
+		const password = '123!';
+
+		request(app)
+			.post('/users')
+			.send({email, password})
+			.expect(400)
+			.end(done)
+	});
+
+	it('should not create user if email in use', (done) => {
+		const email = testUsers[0].email
+		const password = 'abc123!';
+		request(app)
+			.post('/users')
+			.send({email, password})
+			.expect(400)
+			.end( (err, resp) => {
+				if(err){
+					done(err);
+				}
+
+				User.findOne({email})
+					.then(user => {
+						expect(user).toNotExist();
+						done();
+					}).catch(err => done());
+			})
+	});
+});

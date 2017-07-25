@@ -19,14 +19,16 @@ const user2ID = new ObjectID();
 
 const testUsers = [
 	{
+		_id: user1ID,
 		email: 'user1@test.com',
 		password: 'user1@test.com'
 	},{
+		_id: user2ID,
 		email: 'user2@test.com',
 		password: 'user2@test.com',
 		tokens: [{
 			access: 'auth', 
-			token: jwt.sign({_id: user1ID, access: 'auth'}, 'abc123!').toString()
+			token: jwt.sign({_id: user2ID, access: 'auth'}, 'abc123!').toString()
 		}]
 	}
 ];
