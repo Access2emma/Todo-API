@@ -118,7 +118,10 @@ app.post('/users', (request, response) => {
 
 	userObj.save()
 		.then(user => {
-			response.send(user);
+			user.generateAuthToken()
+				.then(token => {
+					response.header('x-auth', token).send(user);
+				})
 
 		}).catch(err => response.send(err))
 });
