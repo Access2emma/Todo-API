@@ -1,6 +1,9 @@
+require('./config/config');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
+const _ = require('lodash');
 
 const {mongoose} = require('./db/mongoose');
 const {Todo} = require('./models/todo');
@@ -54,6 +57,70 @@ app.get('/todos/:id', (request, response) => {
 
 			response.send({todo})
 		}).catch(err => response.status(400).send(err))
+});
+
+app.delete('/todos/:id', (request, response) => {
+	const id = request.params.id;
+
+	if(!ObjectID.isValid(id)){
+		return response
+			.status(404)
+			.send({errorMessage: 'Wrong ID number for todo'})
+	}
+
+	Todo.findByIdAndRemove(id)
+		.then(todo => {
+			if(todo){
+				response.send(todo);
+			}
+
+			response.status(404)
+				.send({errorMessage: 'Todo not found!'});
+		})
+		.catch(err => response.status(400).send(err))
+});
+
+app.patch('/todos/:id', (request, response) => {
+	const id = request.params.id;
+
+	if(!ObjectID.isValid(id)){
+		response.status(404).send();
+	}
+
+	const body = _.pick(request.body, ['text', 'completed']);
+
+	if(body.completed && _.isBoolean(body.completed)){
+		body.completedAt = new Date().getTime();
+	}else{
+		body.completedAt = null;
+		body.completed = false
+	}
+
+	Todo.findByIdAndUpdate(id, 
+		{$set: body},
+		{new: true}
+	).then(todo => {
+		if(!todo){
+			response.status(404).send();
+		}
+
+		response.send(todo);
+
+	}).catch(err => response.send(err));
+
+});
+
+// users route
+app.post('/users', (request, response) => {
+	const userInfo = _.pick(request.body, ['email', 'password']);
+
+	const userObj = new User(userInfo);
+
+	userObj.save()
+		.then(user => {
+			response.send(user);
+
+		}).catch(err => response.send(err))
 });
 
 
