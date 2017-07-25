@@ -9,8 +9,6 @@ const authenticate = (request, response, next) => {
 				return Promise.reject();
 			}
 
-			console.log(user);
-
 			// success
 			request.user = user;
 			request.token = token;
