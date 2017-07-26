@@ -301,3 +301,26 @@ describe('POST /users/login', () => {
 			.end(done)
 	});
 });
+
+describe('DELETE /users/me/token', () => {
+	it('should  remove auth token on logout', (done) => {
+		const token = testUsers[1].tokens[0].token;
+		const email = testUsers[1].email;
+
+		request(app)
+			.delete('/users/me/token')
+			.set('x-auth', token)
+			.expect(200)
+			.end( (err, resp) => {
+				if(err){
+					return done(err);
+				}
+
+				User.findOne({email})
+					.then(user => {
+						expect(user.tokens.length).toBe(0);
+						done();
+					}).catch(err => done(err));
+			})
+	});
+});
