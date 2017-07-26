@@ -1,7 +1,11 @@
-const env = process.env.NODE_ENV || 'production';
+const env = process.env.NODE_ENV || 'development';
 
-if(env === 'test'){
-	process.env.MONGODB_URI = 'mongodb://127.0.0.1:27017/TodoAppTest';
-}else if(env === 'production'){
-	process.env.MONGODB_URI = 'mongodb://127.0.0.1:27017/TodoApp';
+if(env === 'test' || env === 'development'){
+	const allConfig = require('./config.json');
+
+	envConfig = allConfig[env];
+
+	Object.keys(envConfig).forEach( key =>{
+		process.env[key] = envConfig[key];
+	});
 }
