@@ -295,6 +295,9 @@ describe('POST /users/login', () => {
 			.post('/users/login')
 			.send({email, password})
 			.expect(401)
+			.expect( resp =>{
+				expect(resp.headers['x-auth']).toNotExist();
+			})
 			.end(done)
 	});
 });
