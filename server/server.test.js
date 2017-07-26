@@ -93,6 +93,7 @@ describe('GET /todos/:id', () => {
 });
 
 describe('DELETE /todos/:id', () => {
+
 	it('should delete an existing todo with valid todo ID', (done)=>{
 		request(app)
 			.delete(`/todos/${testTodos[1]._id.toHexString()}`)
@@ -106,13 +107,6 @@ describe('DELETE /todos/:id', () => {
 				if(err){
 					return done(err);
 				}
-
-				// Todo.find()
-				// 	.then(todos => {
-				// 		expect(todos.length).toBe(2);
-				// 		expect(todos[0].text).toBe(testTodos[0].text);
-				// 		done();
-				// 	}).catch(err => done(err));
 
 				Todo.findById(testTodos[1]._id.toHexString())
 					.then(todo =>{
@@ -268,5 +262,39 @@ describe('POST /users', () => {
 						done();
 					}).catch(err => done());
 			})
+	});
+});
+
+describe('POST /users/login', () => {
+	it('should login user and return the auth token', (done) => {
+		const email = testUsers[0].email;
+		const password = testUsers[0].password;
+
+		request(app)
+			.post('/users/login')
+			.send({email, password})
+			.expect(200)
+			.expect( resp =>{
+				expect(resp.headers['x-auth']).toExist();
+				expect(resp.body.email).toBe(email);
+			})
+			.end((err, resp) => {
+				User.findOne({email})
+					.then(user => {
+						expect(user.tokens[0]).toInclude({access: 'auth', token: resp.headers['x-auth']});
+						done();
+					}).catch(err => done(err));
+			}); 
+	});
+
+	it('should reject invalid login', (done) => {
+		const email = testUsers[0].email;
+		const password = testUsers[1].password;
+
+		request(app)
+			.post('/users/login')
+			.send({email, password})
+			.expect(401)
+			.end(done)
 	});
 });
